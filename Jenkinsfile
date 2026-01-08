@@ -40,33 +40,50 @@ pipeline {
     }
 
     stage('Secret Scan') {
-      steps {
-        sh '''
-          mkdir -p "${REPORTS_DIR}"
-          docker run --rm \
-              -v "$PWD:/repo" -w /repo \
-              zricethezav/gitleaks:latest \
-              detect --source=/repo \
-                --report-format json \
-                --report-path "reports/gitleaks.json" \
-                --redact
+  steps {
+    sh '''
+      mkdir -p "${REPORTS_DIR}"
 
-          docker run --rm -v "$PWD:/work" -w /work python:3.12-alpine \
+      set +e
+      docker run --rm \
+        -v "$PWD:/repo" -w /repo \
+        zricethezav/gitleaks:latest \
+        detect --source=/repo \
+          --report-format json \
+          --report-path "${REPORTS_DIR}/gitleaks.json" \
+          --redact
+      RC=$?
+      set -e
+
+      # Nếu có leaks, gitleaks thường trả RC != 0
+      if [ "$RC" -ne 0 ]; then
+        echo "[Gitleaks] Leaks detected (pipeline continues). Printing locations (redacted):"
+        docker run --rm -v "$PWD:/work" -w /work python:3.12-alpine \
           python - <<'PY'
-          import json
-          p="reports/gitleaks.json"
-          data=json.load(open(p, encoding="utf-8"))
-          print(f"[Gitleaks] leaks found: {len(data)}")
-          for leak in data[:50]:
-              print(f"- {leak.get('RuleID')} {leak.get('File')}:{leak.get('StartLine')}")
-          
-          # Uncomment to fail the build on any leak
-          # data=json.load(open("reports/gitleaks.json", encoding="utf-8"))
-          # raise SystemExit(1 if len(data)>0 else 0)
-          PY
-              '''
-            }
-          }
+import json, os
+p="reports/gitleaks.json"
+data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
+print(f"[Gitleaks] leaks found: {len(data)}")
+for leak in data[:50]:
+    rule = leak.get("RuleID")
+    f = leak.get("File")
+    line = leak.get("StartLine")
+    desc = leak.get("Description","")
+    match = leak.get("Match","")  # đã bị redact do --redact
+    print(f"- {rule} {f}:{line} :: {desc}")
+    if match:
+        print(f"  match(redacted): {match}")
+PY
+      else
+        # Không in gì (đúng yêu cầu "chỉ in log fail secret")
+        true
+      fi
+
+      # KHÔNG fail pipeline
+      exit 0
+    '''
+  }
+}
 
     stage('Build Docker image') {
       steps {

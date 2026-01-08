@@ -33,7 +33,13 @@ pipeline {
         sh '''
           mkdir -p "${REPORTS_DIR}"
           # Semgrep: use docker image to avoid installing on agent
-          docker run --rm             -v "$PWD:/src" -w /src             semgrep/semgrep:latest             semgrep scan --config auto --error --metrics=off                --json --output "${REPORTS_DIR}/semgrep.json"               .
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+                semgrep scan \
+                  --config p/nodejs \
+                  --config p/expressjs \
+                  --error --metrics=off \
+                  --json --output "${REPORTS_DIR}/semgrep.json" \
+                  .
           python3 - <<'PY'
           import json
           p="reports/semgrep.json"

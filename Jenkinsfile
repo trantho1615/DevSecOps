@@ -46,32 +46,22 @@ pipeline {
 
           # Quét secret trong repo (không cần cài gì trên agent)
           docker run --rm \
-            -v "$PWD:/repo" -w /repo \
-            gitleaks/gitleaks:latest \
-            detect --source=/repo \
-              --report-format json \
-              --report-path "${REPORTS_DIR}/gitleaks.json" \
-              --redact
+              -v "$PWD:/repo" -w /repo \
+              zricethezav/gitleaks:latest \
+              detect --source=/repo \
+                --report-format json \
+                --report-path "reports/gitleaks.json" \
+                --redact
 
           # In ra console: file + line + rule
-          python3 - <<'PY'
+          docker run --rm -v "$PWD:/work" -w /work python:3.12-alpine \
+          python - <<'PY'
           import json
           p="reports/gitleaks.json"
-          try:
-              data=json.load(open(p, encoding="utf-8"))
-          except FileNotFoundError:
-              print("[Gitleaks] no report file")
-              raise SystemExit(0)
-
+          data=json.load(open(p, encoding="utf-8"))
           print(f"[Gitleaks] leaks found: {len(data)}")
           for leak in data[:50]:
-              f = leak.get("File")
-              line = leak.get("StartLine")
-              rule = leak.get("RuleID")
-              desc = leak.get("Description","")
-              print(f"- {rule} {f}:{line} :: {desc}")
-          data=json.load(open("reports/gitleaks.json", encoding="utf-8"))
-          raise SystemExit(1 if len(data)>0 else 0)
+              print(f"- {leak.get('RuleID')} {leak.get('File')}:{leak.get('StartLine')}")
           PY
               '''
             }

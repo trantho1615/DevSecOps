@@ -38,6 +38,61 @@ pipeline {
       }
     }
 
+    python3 - <<'PY'
+    import json
+    p="reports/semgrep.json"
+    d=json.load(open(p, encoding="utf-8"))
+    results=d.get("results", [])
+    print(f"[Semgrep] findings: {len(results)}")
+
+    for r in results[:50]:
+        rule = r.get("check_id")
+        path = r.get("path")
+        start = (r.get("start") or {}).get("line")
+        end = (r.get("end") or {}).get("line")
+        sev = (r.get("extra") or {}).get("severity")
+        msg = ((r.get("extra") or {}).get("message") or "").replace("\\n"," ")
+        print(f"- {sev} {rule} {path}:{start}-{end} :: {msg}")
+    PY
+
+    stage('Secret Scan') {
+      steps {
+        sh '''
+          mkdir -p "${REPORTS_DIR}"
+
+          # Quét secret trong repo (không cần cài gì trên agent)
+          docker run --rm \
+            -v "$PWD:/repo" -w /repo \
+            gitleaks/gitleaks:latest \
+            detect --source=/repo \
+              --report-format json \
+              --report-path "${REPORTS_DIR}/gitleaks.json" \
+              --redact
+
+          # In ra console: file + line + rule
+          python3 - <<'PY'
+          import json
+          p="reports/gitleaks.json"
+          try:
+              data=json.load(open(p, encoding="utf-8"))
+          except FileNotFoundError:
+              print("[Gitleaks] no report file")
+              raise SystemExit(0)
+
+          print(f"[Gitleaks] leaks found: {len(data)}")
+          for leak in data[:50]:
+              f = leak.get("File")
+              line = leak.get("StartLine")
+              rule = leak.get("RuleID")
+              desc = leak.get("Description","")
+              print(f"- {rule} {f}:{line} :: {desc}")
+          data=json.load(open("reports/gitleaks.json", encoding="utf-8"))
+          raise SystemExit(1 if len(data)>0 else 0)
+          PY
+              '''
+            }
+          }
+
     stage('Build Docker image') {
       steps {
         sh '''

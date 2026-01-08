@@ -6,7 +6,7 @@ pipeline {
   }
   environment {
     APP_NAME = "devsecops-node-demo"
-    DOCKER_IMAGE = "YOUR_DOCKERHUB_USERNAME/devsecops-node-demo"
+    DOCKER_IMAGE = "trantho16/devsecops-jenkins"
     REPORTS_DIR = "reports"
   }
   stages {
@@ -62,6 +62,10 @@ pipeline {
           print(f"[Gitleaks] leaks found: {len(data)}")
           for leak in data[:50]:
               print(f"- {leak.get('RuleID')} {leak.get('File')}:{leak.get('StartLine')}")
+          
+          # Uncomment to fail the build on any leak
+          # data=json.load(open("reports/gitleaks.json", encoding="utf-8"))
+          # raise SystemExit(1 if len(data)>0 else 0)
           PY
               '''
             }

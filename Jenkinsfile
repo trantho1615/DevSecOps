@@ -35,22 +35,6 @@ pipeline {
       docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
         semgrep scan --config p/nodejs --config p/expressjs --error --metrics=off \
         .
-          python3 - <<'PY'
-          import json
-          p="reports/semgrep.json"
-          d=json.load(open(p, encoding="utf-8"))
-          results=d.get("results", [])
-          print(f"[Semgrep] findings: {len(results)}")
-
-          for r in results[:50]:
-              rule = r.get("check_id")
-              path = r.get("path")
-              start = (r.get("start") or {}).get("line")
-              end = (r.get("end") or {}).get("line")
-              sev = (r.get("extra") or {}).get("severity")
-              msg = ((r.get("extra") or {}).get("message") or "").replace("\\n"," ")
-              print(f"- {sev} {rule} {path}:{start}-{end} :: {msg}")
-          PY
         '''
       }
     }

@@ -1,0 +1,20 @@
+title = "DevSecOps demo - detect passwords and API keys"
+
+# Bắt các biến kiểu PASSWORD/PASS/PWD/DB_PASSWORD, v.v.
+[[rules]]
+id = "generic-password-assignment"
+description = "Hardcoded password-like assignment"
+# Bắt: password = "...." | pwd: '....' | db_password="...."
+regex = '''(?i)\b(pass(word)?|pwd|db_pass(word)?|dbpassword)\b\s*[:=]\s*["'][^"'\n]{6,}["']'''
+tags = ["password", "hardcoded", "custom"]
+# Giảm false positive: cho phép bỏ qua các chuỗi quá chung chung
+allowlist = { regexes = [
+  '''(?i)\b(pass(word)?|pwd)\b\s*[:=]\s*["'](changeme|password|passw0rd|example|test123|12345678)["']'''
+] }
+
+# Bắt các biến kiểu API_KEY, SECRET_KEY, TOKEN (generic)
+[[rules]]
+id = "generic-secret-assignment"
+description = "Hardcoded secret-like assignment"
+regex = '''(?i)\b(api[_-]?key|secret[_-]?key|token)\b\s*[:=]\s*["'][^"'\n]{8,}["']'''
+tags = ["secret", "hardcoded", "custom"]

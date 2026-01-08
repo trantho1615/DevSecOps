@@ -130,8 +130,8 @@ pipeline {
           mkdir -p "${REPORTS_DIR}"
           docker run --rm \
             --network devsecopsnet \
-            -v "$PWD/${REPORTS_DIR}:/zap/wrk" \
-            owasp/zap2docker-weekly:latest \
+            -v "$PWD/${REPORTS_DIR}:/zap/wrk/:rw" \
+            zaproxy/zap-stable \
             zap-baseline.py -t http://app:3000 -r zap.html -J zap.json -w zap.md
         '''
       }

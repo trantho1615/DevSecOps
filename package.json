@@ -1,0 +1,23 @@
+{
+  "name": "devsecops-node-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple Node.js app for DevSecOps pipeline demo (SAST+DAST)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest --runInBand --ci --reporters=default --reporters=jest-junit"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "supertest": "^6.3.4"
+  },
+  "jest-junit": {
+    "outputDirectory": "reports",
+    "outputName": "junit.xml"
+  }
+}

@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: devsecops-node-demo:staging
+    ports:
+      - "3000:3000"
+    networks:
+      - devsecops
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+networks:
+  devsecops:
+    name: devsecopsnet

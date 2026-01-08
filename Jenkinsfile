@@ -84,6 +84,9 @@ pipeline {
           passwordVariable: 'DOCKERHUB_TOKEN'
         )]) {
           sh '''
+            echo "Pushing to: ${DOCKER_IMAGE}"
+            echo "DockerHub user: ${DOCKERHUB_USER}"
+
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
             docker push "${DOCKER_IMAGE}:${GIT_COMMIT}"
             docker push "${DOCKER_IMAGE}:latest"

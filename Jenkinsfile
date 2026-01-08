@@ -104,16 +104,21 @@ pipeline {
       steps {
         sh '''
           docker compose -f docker-compose.staging.yml up -d --build
-          # Wait until app is healthy (simple poll)
+
+          CID="$(docker compose -f docker-compose.staging.yml ps -q app)"
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/health >/dev/null 2>&1; then
+            STATUS="$(docker inspect --format='{{.State.Health.Status}}' "$CID" 2>/dev/null || true)"
+            echo "Health: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
               echo "Staging is up"
               exit 0
             fi
             sleep 2
           done
+
           echo "Staging did not become healthy in time"
           docker compose -f docker-compose.staging.yml ps
+          docker compose -f docker-compose.staging.yml logs --no-color --tail=200 app || true
           exit 1
         '''
       }

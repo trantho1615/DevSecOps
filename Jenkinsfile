@@ -71,7 +71,7 @@ pipeline {
     stage('Build Docker image') {
       steps {
         sh '''
-          docker build -t "${DOCKER_IMAGE}:${GIT_COMMIT}" -t "${DOCKER_IMAGE}:latest" .
+          docker build -t devsecops-jenkins:local .
         '''
       }
     }
@@ -80,16 +80,21 @@ pipeline {
       steps {
         withCredentials([usernamePassword(
           credentialsId: 'dockerhub',
-          usernameVariable: 'DOCKERHUB_USER',
-          passwordVariable: 'DOCKERHUB_TOKEN'
+          usernameVariable: 'DOCKERHUB_CREDENTIALS_USR',
+          passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW'
         )]) {
           sh '''
-            echo "Pushing to: ${DOCKER_IMAGE}"
-            echo "DockerHub user: ${DOCKERHUB_USER}"
+            set -e
 
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
-            docker push "${DOCKER_IMAGE}:${GIT_COMMIT}"
-            docker push "${DOCKER_IMAGE}:latest"
+            IMAGE="$(echo "${DOCKERHUB_CREDENTIALS_USR}/devsecops-jenkins" | tr '[:upper:]' '[:lower:]')"
+
+            echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+
+            docker tag devsecops-jenkins:local "${IMAGE}:${GIT_COMMIT}"
+            docker tag devsecops-jenkins:local "${IMAGE}:latest"
+
+            docker push "${IMAGE}:${GIT_COMMIT}"
+            docker push "${IMAGE}:latest"
           '''
         }
       }

@@ -20,8 +20,10 @@ pipeline {
       steps {
         sh '''
           mkdir -p "${REPORTS_DIR}"
-          npm ci
-          npm test
+          docker run --rm \
+            -v "$PWD:/app" -w /app \
+            node:20-alpine \
+            sh -lc "npm ci && npm test"
         '''
       }
     }

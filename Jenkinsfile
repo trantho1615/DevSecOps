@@ -32,9 +32,9 @@ pipeline {
       steps {
         sh '''
           mkdir -p "${REPORTS_DIR}"
-      docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
-        semgrep scan --config p/nodejs --config p/expressjs --error --metrics=off \
-        .
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+            semgrep scan --config p/nodejs --config p/expressjs --error --metrics=off \
+            .
         '''
       }
     }
@@ -43,8 +43,6 @@ pipeline {
       steps {
         sh '''
           mkdir -p "${REPORTS_DIR}"
-
-          # Quét secret trong repo (không cần cài gì trên agent)
           docker run --rm \
               -v "$PWD:/repo" -w /repo \
               zricethezav/gitleaks:latest \
@@ -53,7 +51,6 @@ pipeline {
                 --report-path "reports/gitleaks.json" \
                 --redact
 
-          # In ra console: file + line + rule
           docker run --rm -v "$PWD:/work" -w /work python:3.12-alpine \
           python - <<'PY'
           import json
@@ -81,10 +78,11 @@ pipeline {
 
     stage('Push to DockerHub') {
       steps {
-        withCredentials([
-          string(credentialsId: 'dockerhub', variable: 'DOCKERHUB_USER'),
-          string(credentialsId: 'dockerhub', variable: 'DOCKERHUB_TOKEN')
-        ]) {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub',
+          usernameVariable: 'DOCKERHUB_USER',
+          passwordVariable: 'DOCKERHUB_TOKEN'
+        )]) {
           sh '''
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
             docker push "${DOCKER_IMAGE}:${GIT_COMMIT}"

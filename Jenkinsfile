@@ -5,7 +5,7 @@ pipeline {
     disableConcurrentBuilds()
   }
   environment {
-    APP_NAME = "devsecops-node-demo"
+    APP_NAME = "devsecops-jenkins"
     DOCKER_IMAGE = "trantho16/devsecops-jenkins"
     REPORTS_DIR = "reports"
   }
@@ -128,8 +128,11 @@ pipeline {
       steps {
         sh '''
           mkdir -p "${REPORTS_DIR}"
-          # Run ZAP baseline scan from official ZAP docker image against the staging service
-          docker run --rm             --network devsecopsnet             -v "$PWD/${REPORTS_DIR}:/zap/wrk"             owasp/zap2docker-stable             zap-baseline.py               -t http://app:3000               -r zap.html               -J zap.json               -w zap.md
+          docker run --rm \
+            --network devsecopsnet \
+            -v "$PWD/${REPORTS_DIR}:/zap/wrk" \
+            owasp/zap2docker-weekly:latest \
+            zap-baseline.py -t http://app:3000 -r zap.html -J zap.json -w zap.md
         '''
       }
     }

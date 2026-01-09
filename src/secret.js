@@ -1,7 +1,7 @@
 const goodConfig = {
-  apiKey: process.env.API_KEY,        // ✅ Đọc từ env
-  secretKey: process.env.SECRET_KEY,  // ✅ Không hardcode
-  dbPassword: process.env.DB_PASSWORD // ✅ An toàn
+  apiKey: process.env.API_KEY,        
+  secretKey: process.env.SECRET_KEY,  
+  dbPassword: process.env.DB_PASSWORD 
 };
 
 module.exports = {

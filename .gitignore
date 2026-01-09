@@ -3,4 +3,3 @@ reports/
 .nyc_output/
 coverage/
 .DS_Store
-*.demo.js

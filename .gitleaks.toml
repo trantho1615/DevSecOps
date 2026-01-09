@@ -1,20 +1,74 @@
 title = "DevSecOps demo - detect passwords and API keys"
 
-# Bắt các biến kiểu PASSWORD/PASS/PWD/DB_PASSWORD, v.v.
+# ============================================================
+# Paths to exclude from scanning
+# ============================================================
+[allowlist]
+paths = [
+  '''node_modules''',
+  '''\.git''',
+  '''package-lock\.json''',
+  '''\.md$''',
+]
+
+# ============================================================
+# RULE 1: Hardcoded Password
+# Bắt: password = "....", pwd: '....', db_password="....."
+# ============================================================
 [[rules]]
 id = "generic-password-assignment"
 description = "Hardcoded password-like assignment"
-# Bắt: password = "...." | pwd: '....' | db_password="...."
 regex = '''(?i)\b(pass(word)?|pwd|db_pass(word)?|dbpassword)\b\s*[:=]\s*["'][^"'\n]{6,}["']'''
 tags = ["password", "hardcoded", "custom"]
-# Giảm false positive: cho phép bỏ qua các chuỗi quá chung chung
+# Allowlist các placeholder phổ biến
 allowlist = { regexes = [
-  '''(?i)\b(pass(word)?|pwd)\b\s*[:=]\s*["'](changeme|password|passw0rd|example|test123|12345678)["']'''
+  '''(?i)\b(pass(word)?|pwd)\b\s*[:=]\s*["'](changeme|password|passw0rd|example|test123|12345678|your-password-here)["']'''
 ] }
 
-# Bắt các biến kiểu API_KEY, SECRET_KEY, TOKEN (generic)
+# ============================================================
+# RULE 2: API Key / Secret Key / Token
+# Bắt: API_KEY = "...", secret_key: "...", token = "..."
+# ============================================================
 [[rules]]
 id = "generic-secret-assignment"
 description = "Hardcoded secret-like assignment"
-regex = '''(?i)\b(api[_-]?key|secret[_-]?key|token)\b\s*[:=]\s*["'][^"'\n]{8,}["']'''
+regex = '''(?i)\b(api[_-]?key|secret[_-]?key|auth[_-]?token|access[_-]?token)\b\s*[:=]\s*["'][^"'\n]{8,}["']'''
 tags = ["secret", "hardcoded", "custom"]
+
+# ============================================================
+# RULE 3: AWS Access Key ID
+# Pattern: AKIA followed by 16 alphanumeric characters
+# ============================================================
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["aws", "key", "secret"]
+
+# ============================================================
+# RULE 4: AWS Secret Access Key
+# Pattern: 40-character base64-like string
+# ============================================================
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws[_-]?secret[_-]?access[_-]?key\s*[:=]\s*["'][A-Za-z0-9+/]{40}["']'''
+tags = ["aws", "secret", "key"]
+
+# ============================================================
+# RULE 5: Private Key Detection
+# ============================================================
+[[rules]]
+id = "private-key"
+description = "Private Key detected"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+tags = ["key", "private", "secret"]
+
+# ============================================================
+# RULE 6: JWT Token
+# ============================================================
+[[rules]]
+id = "jwt-token"
+description = "JWT Token detected"
+regex = '''eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
+tags = ["jwt", "token", "secret"]

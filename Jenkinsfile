@@ -35,15 +35,24 @@ pipeline {
           mkdir -p "${REPORTS_DIR}"
           
           set +e
+          # Chạy Semgrep lần 1: xuất JSON
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+            semgrep scan \
+              --config p/nodejs \
+              --config p/expressjs \
+              --metrics=off \
+              --json --output /src/${REPORTS_DIR}/semgrep.json \
+              .
+          RC=$?
+          
+          # Chạy Semgrep lần 2: xuất SARIF (nếu cần)
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:latest \
             semgrep scan \
               --config p/nodejs \
               --config p/expressjs \
               --metrics=off \
               --sarif --output /src/${REPORTS_DIR}/semgrep.sarif \
-              --json --output /src/${REPORTS_DIR}/semgrep.json \
-              .
-          RC=$?
+              . || true
           set -e
           
           # Parse và hiển thị kết quả Semgrep

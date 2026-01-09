@@ -1,13 +1,3 @@
-/**
- * ============================================================
- * DEMO FILE: Secret Detection Test Cases
- * ============================================================
- * File này chứa các case để test Gitleaks secret scanner.
- * 
- * ❌ BAD CASES: Sẽ bị Gitleaks phát hiện
- * ✅ GOOD CASES: Cách làm đúng (không bị detect)
- * ============================================================
- */
 
 // ============================================================
 // ❌ BAD CASE 1: Hardcoded Password

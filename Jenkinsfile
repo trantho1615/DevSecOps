@@ -110,6 +110,7 @@ PY
             -v "$PWD:/repo" -w /repo \
             zricethezav/gitleaks:latest \
             detect --source=/repo \
+              --no-git \
               --report-format json \
               --report-path "${REPORTS_DIR}/gitleaks.json" \
               --redact

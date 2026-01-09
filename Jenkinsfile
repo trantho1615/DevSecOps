@@ -120,17 +120,17 @@ PY
             echo "[Gitleaks] ❌ Secrets detected! Printing locations (redacted):"
             docker run --rm -v "$PWD:/work" -w /work python:3.12-alpine \
               python - <<'PY'
-import json, os
-p="reports/gitleaks.json"
-data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
-print(f"[Gitleaks] Total leaks found: {len(data)}")
-for leak in data[:50]:
-    rule = leak.get("RuleID")
-    f = leak.get("File")
-    line = leak.get("StartLine")
-    desc = leak.get("Description","")
-    print(f"  - [{rule}] {f}:{line} - {desc}")
-PY
+              import json, os
+              p="reports/gitleaks.json"
+              data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
+              print(f"[Gitleaks] Total leaks found: {len(data)}")
+              for leak in data[:50]:
+                  rule = leak.get("RuleID")
+                  f = leak.get("File")
+                  line = leak.get("StartLine")
+                  desc = leak.get("Description","")
+                  print(f"  - [{rule}] {f}:{line} - {desc}")
+              PY
           else
             echo "[Gitleaks] ✅ No secrets detected."
           fi

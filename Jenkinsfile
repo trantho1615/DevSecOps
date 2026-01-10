@@ -136,7 +136,7 @@ PY
             echo "[Gitleaks] ✅ No secrets detected."
           fi
 
-          # === UNCOMMENT BELOW TO FAIL PIPELINE ON SECRET LEAKS ===
+          # NCOMMENT BELOW TO FAIL PIPELINE ON SECRET LEAKS
           if [ "$RC" -ne 0 ]; then
           echo "[Gitleaks] Secrets found! Failing pipeline."
           exit 1

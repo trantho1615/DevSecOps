@@ -137,10 +137,10 @@ PY
           fi
 
           # === UNCOMMENT BELOW TO FAIL PIPELINE ON SECRET LEAKS ===
-          # if [ "$RC" -ne 0 ]; then
-          #   echo "[Gitleaks] Secrets found! Failing pipeline."
-          #   exit 1
-          # fi
+          if [ "$RC" -ne 0 ]; then
+          echo "[Gitleaks] Secrets found! Failing pipeline."
+          exit 1
+          fi
           
           exit 0
         '''
